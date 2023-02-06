@@ -1,8 +1,28 @@
 const express = require ('express')
 const app = express ()
-const { uuid} = require ('uuidv4')
+const { uuid, isUuid} = require ('uuidv4')
 app.use(express.json())
 
+// middlewares
+
+function logRequests(req, res, next){
+    const {method, url} = req
+    const logLabel = `[${method.toUpperCase()}] ${url}`
+
+    console.time(logLabel)
+    next()
+    console.timeEnd(logLabel)
+}
+
+function validateProjectID(req, res, next){
+    const { id } = req.params
+    if (!isUuid(id)){
+        return res.status(400).json({error: 'Invalid project ID'})
+    }
+    return next()
+}
+app.use(logRequests)
+app.use('/projects/:id', validateProjectID)
 const projects = []
 
 app.get('/projects', (req,res) => {
